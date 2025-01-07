@@ -232,10 +232,9 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
                     RemainingTime = GetRemainingTime(torrent),
                     SeedRatio = torrent.Ratio
                 };
-
                 // Avoid removing torrents that haven't reached the global max ratio.
                 // Removal also requires the torrent to be paused, in case a higher max ratio was set on the torrent itself (which is not exposed by the api).
-                item.CanMoveFiles = item.CanBeRemoved = torrent.State == "pausedUP" && HasReachedSeedLimit(torrent, config);
+                item.CanMoveFiles = item.CanBeRemoved = torrent.State is "pausedUP" or "stoppedUP" && HasReachedSeedLimit(torrent, config);
 
                 switch (torrent.State)
                 {
@@ -250,12 +249,14 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
 
                     case "queuedDL": // queuing is enabled and torrent is queued for download
                     case "checkingDL": // same as checkingUP, but torrent has NOT finished downloading
+                    case "stoppedDL": // torrent is stopped and has NOT finished downloading
                     case "checkingUP": // torrent has finished downloading and is being checked. Set when `recheck torrent on completion` is enabled. In the event the check fails we shouldn't treat it as completed.
                     case "checkingResumeData": // torrent is checking resume data on load
                         item.Status = DownloadItemStatus.Queued;
                         break;
 
                     case "pausedUP": // torrent is paused and has finished downloading:
+                    case "stoppedUP": // torrent is stopped and has finished downloading
                     case "uploading": // torrent is being seeded and data is being transferred
                     case "stalledUP": // torrent is being seeded, but no connection were made
                     case "queuedUP": // queuing is enabled and torrent is queued for upload
