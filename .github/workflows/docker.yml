@@ -3,7 +3,7 @@ name: Build and Push Custom Whisparr Image
 on:
   push:
     branches:
-      - develop
+      - LocalChanges
     paths:
       - Dockerfile
       - src/**/*
